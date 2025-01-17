@@ -35,10 +35,10 @@ contract TestBLS is Test {
     }
 
     function verifySingleeGasCost(
-        uint256[2] calldata signature,
-        uint256[4] calldata pubkey,
-        uint256[2] calldata message
-    ) external returns (uint256) {
+        uint256[2] memory signature,
+        uint256[4] memory pubkey,
+        uint256[2] memory message
+    ) internal returns (uint256) {
         uint256 g = gasleft();
         require(
             BLS.verifySingle(signature, pubkey, message),
@@ -242,8 +242,8 @@ contract TestBLS is Test {
         );
 
         // Create a test message
-        bytes memory message = "Hello, BLS!";
-
+        bytes memory message = "Hello BLS"; // the same as go test case
+        emit log_named_bytes("Message", message);
         // Sign the message
         uint256[2] memory signature = BLSSign.sign(message, privateKey);
 
@@ -259,11 +259,15 @@ contract TestBLS is Test {
 
         // Hash message to point for verification
         (uint256[2] memory messagePoint, ) = BLS.hashToPoint(message);
+        emit log_named_uint("hash x", messagePoint[0]);
+        emit log_named_uint("hash y", messagePoint[1]);
 
         // Verify the signature using verifySingle
         bool isValid = BLS.verifySingle(signature, publicKey, messagePoint);
-
         assertTrue(isValid, "Signature verification should succeed");
+
+        uint256 gas = verifySingleeGasCost(signature, publicKey, messagePoint);
+        emit log_named_uint("verifySingle gas cost", gas);
 
         // Test with wrong message
         bytes memory wrongMessage = "Wrong message";
@@ -276,5 +280,10 @@ contract TestBLS is Test {
         );
 
         assertFalse(shouldFail, "Verification with wrong message should fail");
+
+        // test with wrong signature and correct message
+        bytes memory wrong_message = "Hello, BLS!I'm wrong";
+        uint256[2] memory wrongSignature = BLSSign.sign(message, privateKey);
+        shouldFail = BLS.verifySingle(wrongSignature, publicKey, messagePoint);
     }
 }
