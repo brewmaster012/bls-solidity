@@ -258,9 +258,12 @@ contract TestBLS is Test {
         );
 
         // Hash message to point for verification
-        (uint256[2] memory messagePoint, ) = BLS.hashToPoint(message);
+        (uint256[2] memory messagePoint, uint256 rep) = BLS.hashToPoint(
+            message
+        );
         emit log_named_uint("hash x", messagePoint[0]);
         emit log_named_uint("hash y", messagePoint[1]);
+        emit log_named_uint("hashToPoint repetition", rep);
 
         // Verify the signature using verifySingle
         bool isValid = BLS.verifySingle(signature, publicKey, messagePoint);
